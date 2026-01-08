@@ -234,3 +234,37 @@ st.dataframe(
     use_container_width=True
 )
 
+# RSI + POSITION CHART
+
+st.subheader("RSI & Strategy Position")
+
+fig_rsi = go.Figure()
+
+# RSI line
+fig_rsi.add_trace(go.Scatter(
+    x=df_ma.index,
+    y=df_ma["RSI"],
+    name="RSI",
+    line=dict(color="blue")
+))
+
+# Overbought / Oversold levels
+fig_rsi.add_hline(y=70, line_dash="dash", line_color="red", annotation_text="Overbought")
+fig_rsi.add_hline(y=30, line_dash="dash", line_color="green", annotation_text="Oversold")
+
+# Position (scaled for visibility)
+fig_rsi.add_trace(go.Scatter(
+    x=df_ma.index,
+    y=df_ma["Signal"] * 100,
+    name="Position (Long)",
+    line=dict(color="orange"),
+    opacity=0.3
+))
+
+fig_rsi.update_layout(
+    yaxis=dict(title="RSI / Position"),
+    legend=dict(orientation="h"),
+    height=400
+)
+
+st.plotly_chart(fig_rsi, use_container_width=True)
