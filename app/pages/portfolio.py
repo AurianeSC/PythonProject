@@ -68,7 +68,23 @@ ASSET_CATALOG.update(st.session_state.dynamic_assets)
 # Sidebar: Search + selection
 st.sidebar.header("Assets")
 
-st.sidebar.subheader("Find FRED series (search online)")
+selected_labels = st.sidebar.multiselect(
+    "Select assets (min 3)",
+    options=list(ASSET_CATALOG.keys()),
+    default=["EUR/USD (DEXUSEU)", "S&P 500 (SP500)", "NASDAQ Composite (NASDAQCOM)"]
+    if "NASDAQ Composite (NASDAQCOM)" in ASSET_CATALOG
+    else ["EUR/USD (DEXUSEU)", "S&P 500 (SP500)", "US 10Y Treasury (DGS10)"],
+)
+
+if len(selected_labels) < 3:
+    st.warning("Please select at least 3 assets for Quant B.")
+    st.stop()
+
+series_ids = [ASSET_CATALOG[x] for x in selected_labels]
+
+st.sidebar.divider()
+
+st.sidebar.subheader("Search an asset")
 q = st.sidebar.text_input("Search keyword (e.g., gold, oil, vix, eur/usd, sp500)", value="")
 limit = st.sidebar.slider("Max results", 5, 50, 15)
 
@@ -97,25 +113,10 @@ if q.strip():
     except Exception as e:
         st.sidebar.error(f"Search failed: {e}")
 
-st.sidebar.divider()
-
-selected_labels = st.sidebar.multiselect(
-    "Select assets (min 3)",
-    options=list(ASSET_CATALOG.keys()),
-    default=["EUR/USD (DEXUSEU)", "S&P 500 (SP500)", "WTI Crude Oil (DCOILWTICO)"]
-    if "WTI Crude Oil (DCOILWTICO)" in ASSET_CATALOG
-    else ["EUR/USD (DEXUSEU)", "S&P 500 (SP500)", "US 10Y Treasury (DGS10)"],
-)
-
-if len(selected_labels) < 3:
-    st.warning("Please select at least 3 assets for Quant B.")
-    st.stop()
-
-series_ids = [ASSET_CATALOG[x] for x in selected_labels]
 
 # Portfolio settings
 st.sidebar.header("Portfolio settings")
-rebalance = st.sidebar.selectbox("Rebalancing", ["Monthly", "None"], index=0)
+rebalance = st.sidebar.selectbox("Rebalancing", ["Weekly", "Monthly", "None"], index=1)
 
 st.sidebar.subheader("Start date")
 start_date = st.sidebar.date_input("Start date", value=None)
@@ -129,7 +130,7 @@ for lab in selected_labels:
             min_value=0.0,
             max_value=1.0,
             value=1.0 / len(selected_labels),
-            step=0.05,
+            step=0.01,
         )
     )
 weights = normalize_weights(raw_weights)
@@ -167,9 +168,8 @@ port_ret = portfolio_returns(rets, weights, rebalance=rebalance)
 port_val = portfolio_value(port_ret, start_value=1.0)
 
 # Main chart
-st.subheader("Main chart: asset levels + portfolio value (base=1)")
+st.subheader("asset levels and portfolio value")
 fig = go.Figure()
-
 for col in levels.columns:
     fig.add_trace(go.Scatter(x=levels.index, y=levels[col], mode="lines", name=col))
 
@@ -178,7 +178,7 @@ fig.add_trace(
         x=port_val.index,
         y=port_val.values,
         mode="lines",
-        name="Portfolio (base=1)",
+        name="Portfolio",
         yaxis="y2",
     )
 )
@@ -200,7 +200,7 @@ c2.metric("Annualized volatility", f"{annualized_volatility(port_ret):.2%}")
 c3.metric("Max drawdown", f"{max_drawdown(port_val):.2%}")
 
 # Correlation matrix
-st.subheader("Correlation matrix (assets)")
+st.subheader("Correlation matrix")
 st.dataframe(correlation_matrix(rets).style.format("{:.2f}"), use_container_width=True)
 
 # Cumulative comparison

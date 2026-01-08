@@ -16,22 +16,30 @@ def normalize_weights(raw_weights: list[float]) -> np.ndarray:
 
 "Calculates portfolio returns based on asset returns and weights"
 def portfolio_returns(returns: pd.DataFrame, weights: np.ndarray, rebalance: str = "Monthly") -> pd.Series:
+    # No rebalance: weights stay constant
     if rebalance == "None":
         pr = (returns * weights).sum(axis=1)
         pr.name = "Portfolio"
         return pr
 
+    if rebalance not in ("Monthly", "Weekly"):
+        raise ValueError("rebalance must be one of: 'None', 'Weekly', 'Monthly'")
+
     out = []
-    last_month = None
     w = weights.copy()
+    last_bucket = None
 
     for dt, row in returns.iterrows():
-        month = dt.to_period("M")
-        if last_month is None:
-            last_month = month
-        if month != last_month:
+        bucket = dt.to_period("W") if rebalance == "Weekly" else dt.to_period("M")
+
+        if last_bucket is None:
+            last_bucket = bucket
+
+        # when period changes, reset weights
+        if bucket != last_bucket:
             w = weights.copy()
-            last_month = month
+            last_bucket = bucket
+
         out.append(float(np.dot(w, row.values)))
 
     return pd.Series(out, index=returns.index, name="Portfolio")
