@@ -9,7 +9,8 @@ def correlation_matrix(returns: pd.DataFrame) -> pd.DataFrame:
 def annualized_return(port_ret: pd.Series, periods_per_year: int = 252) -> float:
     return float(port_ret.mean() * periods_per_year)
 
-"Calculates annualized volatility, a measure of portfolio risk"
+
+"Calculates annualized volatility"
 def annualized_volatility(port_ret: pd.Series, periods_per_year: int = 252) -> float:
     return float(port_ret.std() * np.sqrt(periods_per_year))
 
