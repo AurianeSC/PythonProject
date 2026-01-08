@@ -3,7 +3,8 @@ import plotly.graph_objects as go
 from streamlit_autorefresh import st_autorefresh
 
 from data import load_price_data
-from metrics import buy_and_hold_metrics, moving_average_strategy
+from metrics import buy_and_hold_metrics, moving_average_strategy, compute_rsi
+from metrics import compute_equity_curve
 
 
 # PAGE CONFIG
@@ -41,6 +42,10 @@ st.metric("Current Price", f"{current_price:.2f}")
 
 bh_metrics = buy_and_hold_metrics(data["Close"])
 
+# BUY & HOLD EQUITY CURVE
+bh_returns = data["Close"].pct_change()
+bh_equity = compute_equity_curve(bh_returns)
+
 st.subheader("Buy & Hold Performance")
 c1, c2, c3, c4, c5 = st.columns(5)
 
@@ -60,6 +65,8 @@ ma_results = moving_average_strategy(
 )
 
 df_ma = ma_results["Data"]
+df_ma["RSI"] = compute_rsi(df_ma["Price"])
+
 ma_metrics = ma_results["Metrics"]
 
 st.subheader("Moving Average Strategy Performance")
@@ -72,7 +79,7 @@ c4.metric("Sharpe Ratio", f"{ma_metrics['Sharpe Ratio']:.2f}")
 c5.metric("Max Drawdown", f"{ma_metrics['Max Drawdown']*100:.2f}%")
 
 
-# MAIN CHART — PRICE + STRATEGY EQUITY (OBLIGATOIRE)
+# MAIN CHART — PRICE + STRATEGY EQUITY 
 
 st.subheader("Price & Strategy Cumulative Performance")
 
@@ -163,3 +170,67 @@ fig2.update_layout(
 )
 
 st.plotly_chart(fig2, use_container_width=True)
+
+# EQUITY CURVES COMPARISON — STRATEGY VS BUY & HOLD
+
+st.subheader("Equity Curves Comparison: Strategy vs Buy & Hold")
+
+fig_eq = go.Figure()
+
+fig_eq.add_trace(go.Scatter(
+    x=bh_equity.index,
+    y=bh_equity,
+    name="Buy & Hold Equity (Base 100)",
+    line=dict(color="blue")
+))
+
+fig_eq.add_trace(go.Scatter(
+    x=df_ma.index,
+    y=df_ma["Equity"],
+    name="Strategy Equity (Base 100)",
+    line=dict(color="green")
+))
+
+fig_eq.update_layout(
+    yaxis=dict(title="Equity Value"),
+    xaxis=dict(title="Date"),
+    legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    )
+)
+
+st.plotly_chart(fig_eq, use_container_width=True)
+
+# LATEST DATA TABLE
+
+st.subheader("Latest Available Data")
+
+latest_data = data.tail(10).copy()
+
+latest_data["Return (%)"] = latest_data["Close"].pct_change() * 100
+
+latest_data = latest_data[[
+    "Open",
+    "High",
+    "Low",
+    "Close",
+    "Volume",
+    "Return (%)"
+]]
+
+st.dataframe(
+    latest_data.style.format({
+        "Open": "{:.2f}",
+        "High": "{:.2f}",
+        "Low": "{:.2f}",
+        "Close": "{:.2f}",
+        "Volume": "{:,.0f}",
+        "Return (%)": "{:.2f}"
+    }),
+    use_container_width=True
+)
+
