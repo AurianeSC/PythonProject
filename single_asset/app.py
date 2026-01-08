@@ -5,6 +5,7 @@ from streamlit_autorefresh import st_autorefresh
 from data import load_price_data
 from metrics import buy_and_hold_metrics, moving_average_strategy, compute_rsi
 from metrics import compute_equity_curve
+from metrics import linear_regression_forecast
 
 
 # PAGE CONFIG
@@ -22,6 +23,10 @@ period = st.sidebar.selectbox("Period", ["6mo", "1y", "2y", "5y"])
 st.sidebar.subheader("Moving Average Strategy")
 short_window = st.sidebar.slider("Short MA", 5, 50, 20)
 long_window = st.sidebar.slider("Long MA", 20, 200, 50)
+
+st.sidebar.subheader("Prediction Model")
+forecast_horizon = st.sidebar.slider("Forecast Horizon (days)", 5, 30, 10)
+
 
 # LOAD DATA (CACHED)
 @st.cache_data(ttl=300)
