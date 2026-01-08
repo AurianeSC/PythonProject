@@ -211,6 +211,46 @@ future_dates = pd.date_range(
     freq="B"
 )[1:]
 
+#Price forecast graphic
+
+fig_forecast = go.Figure()
+
+fig_forecast.add_trace(go.Scatter(
+    x=data.index,
+    y=data["Close"],
+    name="Historical Price",
+    line=dict(color="blue")
+))
+
+fig_forecast.add_trace(go.Scatter(
+    x=future_dates,
+    y=forecast,
+    name="Forecast",
+    line=dict(color="orange", dash="dash")
+))
+
+fig_forecast.add_trace(go.Scatter(
+    x=list(future_dates) + list(future_dates[::-1]),
+    y=list(upper_ci) + list(lower_ci[::-1]),
+    fill="toself",
+    fillcolor="rgba(255,165,0,0.2)",
+    line=dict(color="rgba(255,255,255,0)"),
+    name="Confidence Interval"
+))
+
+fig_forecast.update_layout(
+    xaxis_title="Date",
+    yaxis_title="Price",
+    legend=dict(orientation="h")
+)
+
+st.plotly_chart(fig_forecast, use_container_width=True)
+
+st.caption(
+    "Forecast based on a simple linear regression model on log-prices. "
+    "This model is illustrative and does not account for regime changes."
+)
+
 
 # EQUITY CURVES COMPARISON — STRATEGY VS BUY & HOLD
 
