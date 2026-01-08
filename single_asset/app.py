@@ -268,3 +268,38 @@ fig_rsi.update_layout(
 )
 
 st.plotly_chart(fig_rsi, use_container_width=True)
+
+
+
+# RETURNS TIME SERIES
+
+st.subheader("Daily Returns Time Series")
+
+returns_bh = data["Close"].pct_change()
+returns_strategy = df_ma["Strategy_Returns"]
+
+fig_returns = go.Figure()
+
+fig_returns.add_trace(go.Scatter(
+    x=returns_bh.index,
+    y=returns_bh,
+    name="Buy & Hold Returns",
+    line=dict(color="blue"),
+    opacity=0.6
+))
+
+fig_returns.add_trace(go.Scatter(
+    x=returns_strategy.index,
+    y=returns_strategy,
+    name="Strategy Returns",
+    line=dict(color="green"),
+    opacity=0.6
+))
+
+fig_returns.update_layout(
+    xaxis_title="Date",
+    yaxis_title="Daily Return",
+    legend=dict(orientation="h")
+)
+
+st.plotly_chart(fig_returns, use_container_width=True)
