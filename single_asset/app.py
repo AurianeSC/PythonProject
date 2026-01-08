@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
+import pandas as pd
 from streamlit_autorefresh import st_autorefresh
-
 from data import load_price_data
 from metrics import buy_and_hold_metrics, moving_average_strategy, compute_rsi
 from metrics import compute_equity_curve
@@ -39,6 +39,12 @@ if data.empty:
     st.error("No data available for this ticker.")
     st.stop()
 
+forecast, lower_ci, upper_ci = linear_regression_forecast(
+    data["Close"],
+    horizon=forecast_horizon
+)
+
+
 # CURRENT PRICE
 current_price = data["Close"].iloc[-1]
 st.metric("Current Price", f"{current_price:.2f}")
@@ -46,6 +52,7 @@ st.metric("Current Price", f"{current_price:.2f}")
 # BUY & HOLD METRICS
 
 bh_metrics = buy_and_hold_metrics(data["Close"])
+
 
 # BUY & HOLD EQUITY CURVE
 bh_returns = data["Close"].pct_change()
@@ -175,6 +182,35 @@ fig2.update_layout(
 )
 
 st.plotly_chart(fig2, use_container_width=True)
+
+
+# PRICE FORECAST — LINEAR REGRESSION 
+
+
+st.subheader("Price Forecast with Confidence Interval")
+
+# User control
+#forecast_horizon = st.sidebar.slider(
+    #"Forecast Horizon (days)",
+    #min_value=5,
+    #max_value=30,
+    #value=10,
+    #key="forecast_horizon"
+#)
+
+# Forecast computation
+forecast, lower_ci, upper_ci = linear_regression_forecast(
+    data["Close"],
+    horizon=forecast_horizon
+)
+
+# Future dates
+future_dates = pd.date_range(
+    start=data.index[-1],
+    periods=forecast_horizon + 1,
+    freq="B"
+)[1:]
+
 
 # EQUITY CURVES COMPARISON — STRATEGY VS BUY & HOLD
 
