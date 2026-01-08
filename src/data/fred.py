@@ -1,63 +1,66 @@
+import os
+from datetime import date
+from typing import Optional
+
 import pandas as pd
 import requests
-from io import StringIO
 
 
 class DataFetchError(Exception):
     pass
 
 
-FRED_CSV_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv"
+FRED_API_BASE = "https://api.stlouisfed.org/fred"
+FRED_OBS_URL = f"{FRED_API_BASE}/series/observations"
 
 
-def fetch_series(series_id: str) -> pd.Series:
-   
+def _get_api_key() -> str:
+    k = os.getenv("FRED_API_KEY")
+    if not k:
+        raise DataFetchError("Missing FRED_API_KEY environment variable.")
+    return k
+
+
+def fetch_series(series_id: str, start: Optional[date] = None, end: Optional[date] = None) -> pd.Series:
+    """
+    Fetch one FRED series using the official API.
+    Returns a pandas Series indexed by date.
+    """
+    api_key = _get_api_key()
+
+    params = {
+        "api_key": api_key,
+        "file_type": "json",
+        "series_id": series_id,
+    }
+    if start:
+        params["observation_start"] = start.isoformat()
+    if end:
+        params["observation_end"] = end.isoformat()
+
     try:
-        r = requests.get(FRED_CSV_URL, params={"id": series_id}, timeout=20)
-        if r.status_code == 404:
-            raise DataFetchError(f"FRED series not found (404): {series_id}")
+        r = requests.get(FRED_OBS_URL, params=params, timeout=20)
         r.raise_for_status()
-    except DataFetchError:
-        raise
+        data = r.json()
     except Exception as e:
-        raise DataFetchError(f"FRED request failed for {series_id}") from e
+        raise DataFetchError(f"FRED request failed for {series_id}: {e}") from e
 
-    df = pd.read_csv(StringIO(r.text))
+    obs = data.get("observations", [])
+    if not obs:
+        raise DataFetchError(f"No observations returned for {series_id}")
 
-    date_col = None
-    for candidate in ("DATE", "observation_date"):
-        if candidate in df.columns:
-            date_col = candidate
-            break
-
-    if date_col is None:
-        first_line = r.text.splitlines()[0] if r.text else ""
-        raise DataFetchError(
-            f"Unexpected FRED CSV (no date column) for {series_id}. First line: {first_line[:120]}"
-        )
-
-    value_col = None
-    if series_id in df.columns:
-        value_col = series_id
-    else:
-        for c in df.columns:
-            if c != date_col:
-                value_col = c
-                break
-
-    if value_col is None:
-        raise DataFetchError(f"Unexpected FRED CSV (no value col) for {series_id}")
-
-    df[date_col] = pd.to_datetime(df[date_col])
-    s = pd.to_numeric(df[value_col], errors="coerce")
-    s.index = df[date_col]
+    df = pd.DataFrame(obs)
+    # df has columns: date, value, realtime_start, realtime_end, ...
+    df["date"] = pd.to_datetime(df["date"])
+    df["value"] = pd.to_numeric(df["value"], errors="coerce")  # '.' -> NaN
+    s = df.set_index("date")["value"].dropna()
     s.name = series_id
-    return s.dropna()
+    return s
 
 
-def fetch_multi(series_ids: list[str]) -> pd.DataFrame:
+def fetch_multi(series_ids: list[str], start: Optional[date] = None, end: Optional[date] = None) -> pd.DataFrame:
     """
-    Fetch and align multiple FRED series into a DataFrame.
+    Fetch and align multiple FRED series into a DataFrame (inner join on dates).
     """
-    frames = [fetch_series(sid) for sid in series_ids]
+    frames = [fetch_series(sid, start=start, end=end) for sid in series_ids]
     return pd.concat(frames, axis=1, join="inner").sort_index()
