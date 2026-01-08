@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy import stats
 
 
 def max_drawdown(series: pd.Series) -> float:
@@ -91,3 +92,37 @@ def compute_rsi(prices: pd.Series, window: int = 14) -> pd.Series:
     rsi = 100 - (100 / (1 + rs))
 
     return rsi
+
+#linear regression
+
+def linear_regression_forecast(
+    prices: pd.Series,
+    horizon: int = 10,
+    confidence: float = 0.95
+):
+    """
+    Linear regression on log-prices with confidence interval.
+    """
+    y = np.log(prices.values)
+    x = np.arange(len(y))
+
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x, y)
+
+    # Future dates
+    x_future = np.arange(len(y), len(y) + horizon)
+    y_pred_log = intercept + slope * x_future
+    y_pred = np.exp(y_pred_log)
+
+    # Confidence interval
+    t_value = stats.t.ppf((1 + confidence) / 2, len(y) - 2)
+    residuals = y - (intercept + slope * x)
+    sigma = np.sqrt(np.sum(residuals**2) / (len(y) - 2))
+
+    delta = t_value * sigma * np.sqrt(
+        1 + 1/len(y) + (x_future - x.mean())**2 / np.sum((x - x.mean())**2)
+    )
+
+    lower = np.exp(y_pred_log - delta)
+    upper = np.exp(y_pred_log + delta)
+
+    return y_pred, lower, upper
