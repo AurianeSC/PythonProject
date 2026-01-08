@@ -33,6 +33,9 @@ if data.empty:
     st.error("No data available for this ticker.")
     st.stop()
 
+# CURRENT PRICE
+current_price = data["Close"].iloc[-1]
+st.metric("Current Price", f"{current_price:.2f}")
 
 # BUY & HOLD METRICS
 
