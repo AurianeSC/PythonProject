@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 import streamlit as st
-
+from streamlit_autorefresh import st_autorefresh
 from src.data.fred import fetch_multi, DataFetchError
 from src.data.fred_search import search_series, FredSearchError
 
@@ -17,6 +17,10 @@ from src.strategies.portfolio_construction import (
     portfolio_returns,
     portfolio_value,
 )
+
+# Auto-refresh every 5 minutes
+st_autorefresh(interval=300000, key="refresh")
+
 
 st.set_page_config(page_title="Quant B — Portfolio", layout="wide")
 st.title("Quant B — Portfolio Analysis")

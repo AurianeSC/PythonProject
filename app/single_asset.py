@@ -2,10 +2,10 @@ import streamlit as st
 import plotly.graph_objects as go
 import pandas as pd
 from streamlit_autorefresh import st_autorefresh
-from data import load_price_data
-from metrics import buy_and_hold_metrics, moving_average_strategy, compute_rsi
-from metrics import compute_equity_curve
-from metrics import linear_regression_forecast
+from src.data.single_asset_data import load_price_data
+from src.metrics.single_asset_metrics import buy_and_hold_metrics, moving_average_strategy, compute_rsi
+from src.metrics.single_asset_metrics import compute_equity_curve
+from src.metrics.single_asset_metrics import linear_regression_forecast
 
 
 # PAGE CONFIG
