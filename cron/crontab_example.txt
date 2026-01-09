@@ -1,0 +1,2 @@
+#Daily report report at 20:00
+0 20 * * * /home/scyssou/PythonProject/.venv/bin/python /home/scyssou/PythonProject/app/reports/daily_report_portfolio.py >> /home/scyssou/PythonProject/cron.log 2>&1
