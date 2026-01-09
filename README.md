@@ -19,39 +19,6 @@ Project Objectives :
 - Deploy and maintain a continuously running application on Linux
 - Follow professional software engineering and Git workflows
 
-Repository Structure : 
-PythonProject/
-│
-├── app/
-│   ├── pages/
-│   │   ├── single_asset.py        # Quant A Streamlit dashboard
-│   │   ├── portfolio.py           # Quant B Streamlit dashboard
-│   │
-│   ├── reports/
-│   │   ├── daily_report.py         # Single asset daily report (cron)
-│   │   ├── daily_report_portfolio.py # Portfolio daily report (cron)
-│   │   └── output/                # Generated CSV reports
-│
-├── src/
-│   ├── data/
-│   │   ├── single_asset_data.py    # Market data loaders
-│   │   ├── fred.py                 # FRED multi-series fetch
-│   │   ├── fred_search.py          # FRED series search
-│   │
-│   ├── metrics/
-│   │   ├── single_asset_metrics.py # Single asset metrics & strategies
-│   │   ├── portfolio_metrics.py    # Portfolio metrics
-│   │
-│   ├── strategies/
-│   │   ├── portfolio_construction.py # Portfolio construction logic
-│
-├── cron/
-│   ├── daily_report.cron           # Cron configuration
-│
-├── requirements.txt
-├── README.md
-└── .gitignore
-
 Quant A — Single Asset Analysis :
 The Single Asset module focuses on the quantitative analysis of one financial instrument at a time.
 Key Features :
@@ -64,6 +31,7 @@ Key Features :
 
 Implemented Strategies :
 1-Buy & Hold
+
 - Total return
 - Annualized return
 - Volatility
@@ -71,6 +39,7 @@ Implemented Strategies :
 - Maximum drawdown
 
 2- Moving Average Crossover Strategy
+
 - Configurable short and long windows
 - Trading signal generation
 - Equity curve computation
@@ -78,7 +47,9 @@ Implemented Strategies :
 - Strategy performance metrics
 
 3- Predictive Model :
+
 A linear regression model on log-prices is implemented to forecast future prices:
+
 1- Configurable forecast horizon
 2- Confidence intervals
 3- Visualized alongside historical prices
@@ -86,6 +57,7 @@ A linear regression model on log-prices is implemented to forecast future prices
 Quant B — Multi-Asset Portfolio Analysis : 
 
 The Portfolio module extends the analysis to multiple assets simultaneously, using macroeconomic and financial time series from FRED.
+
 Key Features:
 
 1- Selection of at least 3 assets
@@ -95,6 +67,7 @@ Key Features:
 5- Robust data handling (app does not crash on API failure)
 
 Portfolio Analytics:
+
 - Portfolio returns and value
 - Annualized return
 - Annualized volatility
