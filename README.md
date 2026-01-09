@@ -84,8 +84,10 @@ A linear regression model on log-prices is implemented to forecast future prices
 3- Visualized alongside historical prices
 
 Quant B — Multi-Asset Portfolio Analysis : 
+
 The Portfolio module extends the analysis to multiple assets simultaneously, using macroeconomic and financial time series from FRED.
 Key Features:
+
 1- Selection of at least 3 assets
 2- Dynamic asset search via FRED API
 3- Customizable portfolio weights
